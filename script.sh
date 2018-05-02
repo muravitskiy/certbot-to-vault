@@ -79,6 +79,12 @@ do
     CERT=$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' ${CERTS_DIR}/${DOMAIN}/fullchain.pem)
     PRIVATE_KEY=$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' ${CERTS_DIR}/${DOMAIN}/privkey.pem)
 
+    if [[ -z "$CERT" || -z "$PRIVATE_KEY" ]]; then
+        echo "Certificate for $DOMAIN not found"
+        exit 1
+    fi
+
+
     curl \
         $CURL_OPTS \
         -H "X-Vault-Token: $VAULT_TOKEN" \
