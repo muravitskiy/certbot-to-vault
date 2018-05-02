@@ -1,8 +1,8 @@
 FROM certbot/certbot:v0.23.0
 
-RUN apk add --no-cache curl
+RUN apk update && apk add --no-cache bash curl
 
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT ["/bin/bash"]
 
 COPY script.sh .
 

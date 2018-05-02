@@ -42,6 +42,11 @@ PID=$!
 
 sleep 10
 
+CERTBOT_OPTS=""
+if [[ ! -z "${CERTBOT_USE_STAGE}" ]]; then
+    CERTBOT_OPTS+=" --test-cert"
+fi
+
 for DOMAIN in $DOMAINS
 do
     echo "Getting certificates for ${DOMAIN}"
@@ -52,7 +57,8 @@ do
         --webroot-path ${WEBROOT_PATH} \
         --noninteractive \
         --email ${EMAIL} \
-        --agree-tos
+        --agree-tos \
+        $CERTBOT_OPTS
 done
 
 echo "Certificates were renewed"
@@ -64,17 +70,17 @@ echo "Writing certificates to Vault"
 
 CURL_OPTS="--silent --show-error --fail"
 
-if [[ -z "${VAULT_SKIP_VERIFY}" ]]; then
+if [[ ! -z "${VAULT_SKIP_VERIFY}" ]]; then
     CURL_OPTS+=" --insecure"
 fi
 
 for DOMAIN in $DOMAINS
 do
-    CERT=$(cat ${CERTS_DIR}/${DOMAIN}/fullchain.pem)
-    PRIVATE_KEY=$(cat ${CERTS_DIR}/${DOMAIN}/privkey.pem)
+    CERT=$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' ${CERTS_DIR}/${DOMAIN}/fullchain.pem)
+    PRIVATE_KEY=$(sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' ${CERTS_DIR}/${DOMAIN}/privkey.pem)
 
     curl \
-        ${CURL_OPTS} \
+        $CURL_OPTS \
         -H "X-Vault-Token: $VAULT_TOKEN" \
         -H "Content-Type: application/json" \
         -X POST \
